@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     private var mRemoveLocationUpdatesButton: Button? = null
 
     // Monitors the state of the connection to the service.
-    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+    private val mServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             val binder: LocationUpdateService.LocalBinder = service as LocationUpdateService.LocalBinder
             mService = binder.getService()
@@ -90,10 +90,12 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
-        bindService(
-            Intent(this, LocationUpdateService::class.java), mServiceConnection,
-            Context.BIND_AUTO_CREATE
-        )
+        if(!mBound) {
+            bindService(
+                Intent(this, LocationUpdateService::class.java), mServiceConnection,
+                Context.BIND_AUTO_CREATE
+            )
+        }
     }
 
     override fun onResume() {
@@ -120,6 +122,13 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         PreferenceManager.getDefaultSharedPreferences(this)
             .unregisterOnSharedPreferenceChangeListener(this)
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // TODO : need update
+        unbindService(mServiceConnection)
     }
 
     /**
